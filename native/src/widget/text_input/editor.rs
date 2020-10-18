@@ -27,6 +27,26 @@ impl<'a> Editor<'a> {
         self.cursor.move_right(self.value);
     }
 
+    pub fn copy(&mut self) -> String {
+        match self.cursor.selection(self.value) {
+            Some((start, end)) => {
+                self.value.select_many(start, end)
+            }
+            None => String::new(),
+        }        
+    }
+
+    pub fn cut(&mut self) -> String {
+        match self.cursor.selection(self.value) {
+            Some((start, end)) => {
+                let s = self.value.select_many(start, end);
+                self.backspace();
+                s
+            }
+            None => String::new(),
+        }        
+    }
+
     pub fn paste(&mut self, content: Value) {
         let length = content.len();
 

@@ -319,6 +319,8 @@ where
             Event::Keyboard(keyboard::Event::CharacterReceived(c))
                 if self.state.is_focused
                     && self.state.is_pasting.is_none()
+                    && !self.state.is_copying
+                    && !self.state.is_cutting
                     && !c.is_control() =>
             {
                 let mut editor =
@@ -467,6 +469,49 @@ where
                         self.state.is_pasting = None;
                     }
                 }
+                keyboard::KeyCode::C => {
+                    if platform::is_copy_paste_modifier_pressed(modifiers) {
+                        if !self.state.is_copying {
+                            if let Some(clipboard) = clipboard {
+                                let mut editor = Editor::new(
+                                    &mut self.value,
+                                    &mut self.state.cursor,
+                                );
+
+                                clipboard
+                                    .set_content(editor.copy())
+                                    .unwrap_or_default();
+
+                                self.state.is_copying = true;
+                            };
+                        }
+                    } else {
+                        self.state.is_copying = false;
+                    }
+                }
+                keyboard::KeyCode::X => {
+                    if platform::is_copy_paste_modifier_pressed(modifiers) {
+                        if !self.state.is_cutting {
+                            if let Some(clipboard) = clipboard {
+                                let mut editor = Editor::new(
+                                    &mut self.value,
+                                    &mut self.state.cursor,
+                                );
+
+                                clipboard
+                                    .set_content(editor.cut())
+                                    .unwrap_or_default();
+
+                                let message = (self.on_change)(editor.contents());
+                                messages.push(message);
+
+                                self.state.is_cutting = true;
+                            };
+                        }
+                    } else {
+                        self.state.is_cutting = false;
+                    }
+                }
                 keyboard::KeyCode::A => {
                     if platform::is_copy_paste_modifier_pressed(modifiers) {
                         self.state.cursor.select_all(&self.value);
@@ -475,6 +520,8 @@ where
                 keyboard::KeyCode::Escape => {
                     self.state.is_focused = false;
                     self.state.is_dragging = false;
+                    self.state.is_copying = false;
+                    self.state.is_cutting = false;
                     self.state.is_pasting = None;
                 }
                 _ => {}
@@ -484,6 +531,12 @@ where
             }) => match key_code {
                 keyboard::KeyCode::V => {
                     self.state.is_pasting = None;
+                }
+                keyboard::KeyCode::C => {
+                    self.state.is_copying = false;
+                }
+                keyboard::KeyCode::X => {
+                    self.state.is_cutting = false;
                 }
                 _ => {}
             },
@@ -650,6 +703,8 @@ where
 pub struct State {
     is_focused: bool,
     is_dragging: bool,
+    is_copying: bool,
+    is_cutting: bool,
     is_pasting: Option<Value>,
     last_click: Option<mouse::Click>,
     cursor: Cursor,
@@ -671,6 +726,8 @@ impl State {
         Self {
             is_focused: true,
             is_dragging: false,
+            is_copying: false,
+            is_cutting: false,
             is_pasting: None,
             last_click: None,
             cursor: Cursor::default(),

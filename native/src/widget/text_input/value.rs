@@ -120,6 +120,11 @@ impl Value {
         let _ = self.graphemes.splice(start..end, std::iter::empty());
     }
 
+    /// Selects the graphemes from `start` to `end`.
+    pub fn select_many(&mut self, start: usize, end: usize) -> String {
+        self.graphemes[start..end].concat()
+    }
+
     /// Returns a new [`Value`] with all its graphemes replaced with the
     /// dot ('•') character.
     ///

@@ -1,3 +1,5 @@
+use std::error::Error;
+
 /// A buffer for short-term storage and transfer within and between
 /// applications.
 #[allow(missing_debug_implementations)]
@@ -15,5 +17,9 @@ impl Clipboard {
 impl iced_native::Clipboard for Clipboard {
     fn content(&self) -> Option<String> {
         self.0.read().ok()
+    }
+
+    fn set_content(&self, s: String) -> Result<(), Box<dyn Error>> {
+        self.0.write(s)
     }
 }
