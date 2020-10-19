@@ -1,9 +1,5 @@
 //! Write some text for your users to read.
-use crate::{
-    layout, Color, Element, Hasher, HorizontalAlignment, Layout, Length, Point,
-    Rectangle, Size, VerticalAlignment, Widget,
-};
-
+use crate::{Clipboard, Color, Element, Event, Hasher, HorizontalAlignment, Layout, Length, Point, Rectangle, Size, VerticalAlignment, Widget, layout, mouse};
 use std::hash::Hash;
 
 /// A paragraph of text.
@@ -160,6 +156,21 @@ where
             self.horizontal_alignment,
             self.vertical_alignment,
         )
+    }
+
+    fn on_event(&mut self, event: Event, layout: Layout<'_>, cursor_position: Point, _messages: &mut Vec<Message>, _renderer: &Renderer, clipboard: Option<&dyn Clipboard>) {
+        match event {
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
+                if layout.bounds().contains(cursor_position) {
+                    if let Some(clipboard) = clipboard {
+                        clipboard
+                            .set_content(self.content.to_owned())
+                            .unwrap_or_default();
+                    };
+                }
+            }
+            _ => ()
+        }
     }
 
     fn hash_layout(&self, state: &mut Hasher) {
