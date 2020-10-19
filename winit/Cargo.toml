@@ -15,7 +15,7 @@ debug = ["iced_native/debug"]
 
 [dependencies]
 winit = "0.23"
-window_clipboard = { path = "../../window_clipboard" }
+window_clipboard = { git = "https://github.com/simonhdickson/window_clipboard.git" }
 log = "0.4"
 thiserror = "1.0"
 
